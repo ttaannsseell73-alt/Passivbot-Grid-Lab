@@ -1,5 +1,5 @@
 {
   "mode": "cache-shape",
-  "requested_at": "2026-09-24T15:16:00+03:00",
-  "reason": "measure Forager candle cache coverage"
+  "requested_at": "2026-09-24T15:17:00+03:00",
+  "reason": "inspect candle index sample paths"
 }
