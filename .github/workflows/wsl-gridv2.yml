@@ -97,7 +97,7 @@ jobs:
             cache-shape)
               cd "$PB"
               echo "=== CACHE ROOTS ==="
-              find caches -maxdepth 4 -type f -name 'index.json' 2>/dev/null | head -n 40 || true
+              find caches -maxdepth 8 -type f -name 'index.json' 2>/dev/null | head -n 40 || true
               echo "=== CACHE COUNTS ==="
               printf "index_files="
               find caches -type f -name 'index.json' 2>/dev/null | wc -l
