@@ -94,6 +94,9 @@ jobs:
               echo "=== RECENT LOG TAIL ==="
               tail -n 220 runtime-tools/passivbot-demo.log 2>/dev/null || true
               ;;
+            cache-health)
+              python3 runtime-tools/cache-health.py --root "$PB/caches/ohlcv/binance" --json-out "$PB/runtime-tools/cache-health.json"
+              ;;
             cache-shape)
               cd "$PB"
               echo "=== CACHE ROOTS ==="
