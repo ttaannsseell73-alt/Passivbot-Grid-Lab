@@ -1,5 +1,5 @@
 {
-  "mode": "status",
-  "requested_at": "2026-09-24T14:55:00+03:00",
-  "reason": "active TEST01 evidence check"
+  "mode": "evidence",
+  "requested_at": "2026-09-24T15:00:00+03:00",
+  "reason": "first live forager evidence"
 }
