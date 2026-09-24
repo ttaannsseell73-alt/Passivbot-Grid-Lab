@@ -1,5 +1,5 @@
 {
-  "mode": "cache-health",
-  "requested_at": "2026-09-24T15:19:00+03:00",
-  "reason": "measure Forager 35-minute readiness threshold"
+  "mode": "evidence",
+  "requested_at": "2026-09-24T15:21:00+03:00",
+  "reason": "post-patch ranking/selection check after cache recovery"
 }
