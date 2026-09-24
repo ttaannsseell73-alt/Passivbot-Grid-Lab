@@ -67,6 +67,16 @@ def summarize(root: Path, now_ms: int) -> dict:
         stale = [row for row in group if row["rows"] > 0 and not row["fresh"]]
         empty = [row for row in group if row["rows"] <= 0 or row["last_final_ts"] <= 0]
         lags = [row["lag_ms"] for row in group if row["lag_ms"] is not None]
+        thresholds_minutes = [5, 10, 20, 35, 60]
+        within = {
+            str(minutes): sum(
+                1
+                for row in group
+                if row["lag_ms"] is not None
+                and row["lag_ms"] <= minutes * 60_000
+            )
+            for minutes in thresholds_minutes
+        }
         out["timeframes"][tf] = {
             "indices": len(group),
             "basis": len(basis),
@@ -80,6 +90,7 @@ def summarize(root: Path, now_ms: int) -> dict:
             "lag_minutes_median": (
                 round(statistics.median(lags) / 60_000.0, 2) if lags else None
             ),
+            "within_minutes": within,
             "fresh_sample": [row["symbol"] for row in fresh[:10]],
             "stale_sample": [row["symbol"] for row in stale[:10]],
             "empty_sample": [row["symbol"] for row in empty[:10]],
@@ -105,7 +116,12 @@ def main():
             f"{tf} indices={stats['indices']} basis={stats['basis']} "
             f"fresh={stats['fresh']} ({stats['fresh_pct']:.2f}%) "
             f"stale={stats['stale']} empty={stats['empty']} "
-            f"rows_med={stats['rows_median']} lag_med_min={stats['lag_minutes_median']}"
+            f"rows_med={stats['rows_median']} lag_med_min={stats['lag_minutes_median']} "
+            f"within5={stats['within_minutes']['5']} "
+            f"within10={stats['within_minutes']['10']} "
+            f"within20={stats['within_minutes']['20']} "
+            f"within35={stats['within_minutes']['35']} "
+            f"within60={stats['within_minutes']['60']}"
         )
         if stats["stale_sample"]:
             print(f"{tf} stale_sample={','.join(stats['stale_sample'])}")
