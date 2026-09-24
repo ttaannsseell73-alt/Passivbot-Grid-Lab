@@ -1,5 +1,5 @@
 {
-  "mode": "stop",
-  "requested_at": "2026-09-24T15:12:00+03:00",
-  "reason": "apply bounded Forager ranking patch; precheck flat"
+  "mode": "patch-ranking-concurrency",
+  "requested_at": "2026-09-24T15:13:00+03:00",
+  "reason": "bound Forager ranking coroutine fanout"
 }
