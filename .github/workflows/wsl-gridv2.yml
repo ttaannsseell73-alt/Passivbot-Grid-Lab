@@ -45,6 +45,17 @@ jobs:
           MODE="$(python3 -c 'import json; print(json.load(open("control/command.json"))["mode"])')"
           echo "MODE=$MODE"
 
+          stop_bot() {
+            pids="$(pgrep -f "/venv/bin/passivbot live" || true)"
+            if [ -n "$pids" ]; then
+              kill $pids || true
+            fi
+            lockpids="$(pgrep -f "flock -n runtime-tools/passivbot-demo.lock" || true)"
+            if [ -n "$lockpids" ]; then
+              kill $lockpids || true
+            fi
+          }
+
           case "$MODE" in
             diagnose)
               echo "=== PROCESS ==="
@@ -66,6 +77,8 @@ jobs:
               ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
               echo "=== PROCESS ==="
               pgrep -af passivbot || true
+              echo "=== RECENT BOT LOG ==="
+              tail -n 120 runtime-tools/passivbot-demo.log 2>/dev/null || true
               ;;
             start-test01)
               cd "$PB"
@@ -74,26 +87,25 @@ jobs:
                 echo "START-REFUSED bot already running"
                 exit 1
               fi
-              setsid -f runtime-tools/run-once.sh > runtime-tools/passivbot-demo.log 2>&1 </dev/null
-              sleep 12
-              if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
-                echo TEST01-START-PASS
-                tail -n 120 runtime-tools/passivbot-demo.log || true
-              else
-                echo TEST01-START-FAIL
-                tail -n 180 runtime-tools/passivbot-demo.log || true
+              : > runtime-tools/passivbot-demo.log
+              env -u RUNNER_TRACKING_ID setsid -f runtime-tools/run-once.sh > runtime-tools/passivbot-demo.log 2>&1 </dev/null
+              echo "START-LAUNCHED"
+              sleep 75
+              echo "=== STARTUP LOG ==="
+              tail -n 180 runtime-tools/passivbot-demo.log || true
+              if grep -q "failed reason=startup_error" runtime-tools/passivbot-demo.log; then
+                echo "TEST01-STARTUP-FAIL"
+                stop_bot
                 exit 1
               fi
+              if ! pgrep -f "/venv/bin/passivbot live" >/dev/null; then
+                echo "TEST01-PROCESS-MISSING"
+                exit 1
+              fi
+              echo "TEST01-STARTUP-PASS"
               ;;
             stop)
-              pids="$(pgrep -f "/venv/bin/passivbot live" || true)"
-              if [ -n "$pids" ]; then
-                kill $pids
-              fi
-              lockpids="$(pgrep -f "flock -n runtime-tools/passivbot-demo.lock" || true)"
-              if [ -n "$lockpids" ]; then
-                kill $lockpids
-              fi
+              stop_bot
               echo STOP-PASS
               ;;
             *)
