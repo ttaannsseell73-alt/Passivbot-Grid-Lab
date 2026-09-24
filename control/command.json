@@ -1,5 +1,5 @@
 {
-  "mode": "status",
-  "requested_at": "2026-09-24T15:06:00+03:00",
-  "reason": "pre-patch safety check"
+  "mode": "stop",
+  "requested_at": "2026-09-24T15:12:00+03:00",
+  "reason": "apply bounded Forager ranking patch; precheck flat"
 }
