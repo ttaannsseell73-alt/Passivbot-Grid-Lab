@@ -35,6 +35,7 @@ jobs:
           set -euo pipefail
           PB=/home/tansel/Passivbot-Binance-Test
           install -m 755 runtime-tools/demo-universe.py "$PB/runtime-tools/demo-universe.py"
+          install -m 755 runtime-tools/patch-ranking-concurrency.py "$PB/runtime-tools/patch-ranking-concurrency.py"
           echo TOOLS-PASS
 
       - name: Execute requested mode
@@ -92,6 +93,17 @@ jobs:
               grep -E "\[forager\]|forager\.selection|top_scores|selected_symbols|entry_|ideal orders|create order|order create|placed|submitted|shortlist|slots_open|startup-ready" runtime-tools/passivbot-demo.log 2>/dev/null | tail -n 220 || true
               echo "=== RECENT LOG TAIL ==="
               tail -n 220 runtime-tools/passivbot-demo.log 2>/dev/null || true
+              ;;
+            patch-ranking-concurrency)
+              cd "$PB"
+              if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
+                echo "PATCH-REFUSED bot running"
+                exit 1
+              fi
+              ./venv/bin/python runtime-tools/patch-ranking-concurrency.py --path src/passivbot.py
+              ./venv/bin/python -m py_compile src/passivbot.py
+              grep -q GRID_V2_BOUNDED_FORAGER_RANKING src/passivbot.py
+              echo RANKING-PATCH-VERIFY-PASS
               ;;
             start-test01)
               cd "$PB"
