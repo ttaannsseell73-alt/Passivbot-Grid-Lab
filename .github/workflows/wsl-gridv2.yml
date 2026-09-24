@@ -1,19 +1,10 @@
 name: WSL GRID V2 Control
 
 on:
-  workflow_dispatch:
-    inputs:
-      mode:
-        description: Action to run on the local WSL GRID V2 host
-        required: true
-        type: choice
-        default: diagnose
-        options:
-          - diagnose
-          - preflight
-          - status
-          - start-test01
-          - stop
+  push:
+    branches: [main]
+    paths:
+      - control/command.json
 
 permissions:
   contents: read
@@ -46,74 +37,67 @@ jobs:
           install -m 755 runtime-tools/demo-universe.py "$PB/runtime-tools/demo-universe.py"
           echo TOOLS-PASS
 
-      - name: Diagnose
-        if: ${{ inputs.mode == 'diagnose' }}
+      - name: Execute requested mode
         shell: bash
         run: |
           set -euo pipefail
           PB=/home/tansel/Passivbot-Binance-Test
-          echo "=== PROCESS ==="
-          pgrep -af passivbot || true
-          echo "=== RECENT BOT LOG ==="
-          tail -n 160 "$PB/runtime-tools/passivbot-demo.log" 2>/dev/null || true
-          echo "=== ACCOUNT STATE ==="
-          cd "$PB"
-          ./venv/bin/python runtime-tools/demostate.py
+          MODE="$(python3 -c 'import json; print(json.load(open("control/command.json"))["mode"])')"
+          echo "MODE=$MODE"
 
-      - name: Demo universe preflight
-        if: ${{ inputs.mode == 'preflight' || inputs.mode == 'start-test01' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          PB=/home/tansel/Passivbot-Binance-Test
-          cd "$PB"
-          ./venv/bin/python runtime-tools/demo-universe.py --config configs/demo-hsl.json --report runtime-tools/demo-universe-report.json
-
-      - name: Status
-        if: ${{ inputs.mode == 'status' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          PB=/home/tansel/Passivbot-Binance-Test
-          cd "$PB"
-          ./venv/bin/python runtime-tools/demostate.py
-          echo "=== EQUITY ==="
-          ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
-          echo "=== PROCESS ==="
-          pgrep -af passivbot || true
-
-      - name: Start TEST 01
-        if: ${{ inputs.mode == 'start-test01' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          PB=/home/tansel/Passivbot-Binance-Test
-          cd "$PB"
-          if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
-            echo "START-REFUSED bot already running"
-            exit 1
-          fi
-          setsid -f runtime-tools/run-once.sh > runtime-tools/passivbot-demo.log 2>&1 </dev/null
-          sleep 8
-          if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
-            echo TEST01-START-PASS
-          else
-            echo TEST01-START-FAIL
-            tail -n 160 runtime-tools/passivbot-demo.log || true
-            exit 1
-          fi
-
-      - name: Stop bot
-        if: ${{ inputs.mode == 'stop' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          pids="$(pgrep -f "/venv/bin/passivbot live" || true)"
-          if [ -n "$pids" ]; then
-            kill $pids
-          fi
-          lockpids="$(pgrep -f "flock -n runtime-tools/passivbot-demo.lock" || true)"
-          if [ -n "$lockpids" ]; then
-            kill $lockpids
-          fi
-          echo STOP-PASS
+          case "$MODE" in
+            diagnose)
+              echo "=== PROCESS ==="
+              pgrep -af passivbot || true
+              echo "=== RECENT BOT LOG ==="
+              tail -n 180 "$PB/runtime-tools/passivbot-demo.log" 2>/dev/null || true
+              echo "=== ACCOUNT STATE ==="
+              cd "$PB"
+              ./venv/bin/python runtime-tools/demostate.py
+              ;;
+            preflight)
+              cd "$PB"
+              ./venv/bin/python runtime-tools/demo-universe.py --config configs/demo-hsl.json --report runtime-tools/demo-universe-report.json
+              ;;
+            status)
+              cd "$PB"
+              ./venv/bin/python runtime-tools/demostate.py
+              echo "=== EQUITY ==="
+              ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
+              echo "=== PROCESS ==="
+              pgrep -af passivbot || true
+              ;;
+            start-test01)
+              cd "$PB"
+              ./venv/bin/python runtime-tools/demo-universe.py --config configs/demo-hsl.json --report runtime-tools/demo-universe-report.json
+              if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
+                echo "START-REFUSED bot already running"
+                exit 1
+              fi
+              setsid -f runtime-tools/run-once.sh > runtime-tools/passivbot-demo.log 2>&1 </dev/null
+              sleep 12
+              if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
+                echo TEST01-START-PASS
+                tail -n 120 runtime-tools/passivbot-demo.log || true
+              else
+                echo TEST01-START-FAIL
+                tail -n 180 runtime-tools/passivbot-demo.log || true
+                exit 1
+              fi
+              ;;
+            stop)
+              pids="$(pgrep -f "/venv/bin/passivbot live" || true)"
+              if [ -n "$pids" ]; then
+                kill $pids
+              fi
+              lockpids="$(pgrep -f "flock -n runtime-tools/passivbot-demo.lock" || true)"
+              if [ -n "$lockpids" ]; then
+                kill $lockpids
+              fi
+              echo STOP-PASS
+              ;;
+            *)
+              echo "REFUSED unknown mode: $MODE"
+              exit 2
+              ;;
+          esac
