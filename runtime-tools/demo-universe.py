@@ -18,7 +18,7 @@ def fetch_json(url: str):
         return json.load(response)
 
 
-def eligible_bases(exchange_info, book_tickers, price_tickers):
+def eligible_markets(exchange_info, book_tickers, price_tickers):
     book = {
         str(row.get("symbol")): row
         for row in book_tickers
@@ -59,16 +59,27 @@ def eligible_bases(exchange_info, book_tickers, price_tickers):
         if not (bid > 0 and ask >= bid and last > 0):
             reasons.append("ticker")
 
-        if base and not reasons:
-            eligible.append(base)
+        if symbol and base and not reasons:
+            eligible.append(
+                {
+                    "identifier": f"binance::{symbol}",
+                    "native_symbol": symbol,
+                    "base": base,
+                }
+            )
         elif symbol:
             rejected[symbol] = reasons or ["base"]
 
-    return sorted(set(eligible)), rejected
+    # Exact exchange-qualified native IDs are deliberate. Base aliases may be
+    # ambiguous in Passivbot's market cache (e.g. one base mapping to multiple
+    # contracts). Native IDs are lossless and fail closed if unavailable.
+    unique = {row["identifier"]: row for row in eligible}
+    return [unique[k] for k in sorted(unique)], rejected
 
 
-def update_config(path: Path, bases: list[str]):
-    cfg = json.loads(path.read_text(encoding="utf-8"))
+def update_config(path: Path, identifiers: list[str]):
+    original_text = path.read_text(encoding="utf-8")
+    cfg = json.loads(original_text)
     live = cfg.get("live")
     if not isinstance(live, dict):
         raise RuntimeError("config missing live object")
@@ -76,13 +87,12 @@ def update_config(path: Path, bases: list[str]):
     if not isinstance(approved, dict):
         raise RuntimeError("config missing live.approved_coins object")
 
-    approved["long"] = list(bases)
-    approved["short"] = list(bases)
-
     backup = path.with_suffix(path.suffix + ".pre-demo-universe.bak")
     if not backup.exists():
-        backup.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
+        backup.write_text(original_text, encoding="utf-8")
 
+    approved["long"] = list(identifiers)
+    approved["short"] = list(identifiers)
     path.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
 
 
@@ -96,16 +106,22 @@ def main():
     exchange_info = fetch_json(EXCHANGE_INFO)
     book_tickers = fetch_json(BOOK_TICKER)
     price_tickers = fetch_json(PRICE_TICKER)
-    bases, rejected = eligible_bases(exchange_info, book_tickers, price_tickers)
+    markets, rejected = eligible_markets(exchange_info, book_tickers, price_tickers)
+    identifiers = [row["identifier"] for row in markets]
+    bases = sorted({row["base"] for row in markets})
 
-    if not bases:
+    if not identifiers:
         raise RuntimeError("Demo universe preflight returned zero eligible markets")
 
     report = {
-        "eligible_count": len(bases),
+        "eligible_count": len(identifiers),
+        "eligible_base_count": len(bases),
+        "eligible_identifiers": identifiers,
         "eligible_bases": bases,
+        "eligible_markets": markets,
         "rejected_count": len(rejected),
         "rejected": rejected,
+        "identifier_policy": "exchange-qualified native market ID",
         "source": {
             "exchangeInfo": EXCHANGE_INFO,
             "bookTicker": BOOK_TICKER,
@@ -118,9 +134,12 @@ def main():
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
     if args.config and not args.dry_run:
-        update_config(Path(args.config), bases)
+        update_config(Path(args.config), identifiers)
 
-    print(f"DEMO-UNIVERSE-PASS eligible={len(bases)} rejected={len(rejected)}")
+    print(
+        f"DEMO-UNIVERSE-PASS eligible={len(identifiers)} "
+        f"bases={len(bases)} rejected={len(rejected)} identifiers=exact-native"
+    )
     print(f"REPORT {report_path}")
     if args.config:
         print("CONFIG " + ("UNCHANGED" if args.dry_run else "UPDATED") + f" {args.config}")
