@@ -1,5 +1,5 @@
 {
-  "mode": "evidence",
-  "requested_at": "2026-09-24T15:03:00+03:00",
-  "reason": "inspect candle budget bottleneck"
+  "mode": "status",
+  "requested_at": "2026-09-24T15:06:00+03:00",
+  "reason": "pre-patch safety check"
 }
