@@ -1,0 +1,31 @@
+# Secrets
+.env
+.env.*
+api-keys.json
+*api-key*
+*apikey*
+*secret*
+*.pem
+*.key
+
+# Runtime/account data
+runtime-tools/*.log
+runtime-tools/*.csv
+runtime-tools/*baseline*.json
+runtime-tools/*equity*.json
+artifacts/
+data/
+logs/
+*.log
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
