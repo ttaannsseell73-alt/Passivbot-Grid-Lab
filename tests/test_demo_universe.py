@@ -29,29 +29,37 @@ def test_filters_to_tradeable_perpetual_usdt_with_valid_quotes():
         {"symbol": "BADUSDT", "price": "4.5"},
     ]
 
-    eligible, rejected = mod.eligible_bases(exchange, books, prices)
+    eligible, rejected = mod.eligible_markets(exchange, books, prices)
 
-    assert eligible == ["BTC"]
+    assert eligible == [
+        {
+            "identifier": "binance::BTCUSDT",
+            "native_symbol": "BTCUSDT",
+            "base": "BTC",
+        }
+    ]
     assert "OLDUSDT" in rejected
     assert "ETHUSDC" in rejected
     assert "BADUSDT" in rejected
 
 
-def test_deduplicates_base_assets():
+def test_keeps_distinct_native_markets_even_when_base_alias_matches():
     exchange = {
         "symbols": [
-            {"symbol": "BTCUSDT", "baseAsset": "BTC", "quoteAsset": "USDT", "status": "TRADING", "contractType": "PERPETUAL"},
-            {"symbol": "BTCUSDT_2", "baseAsset": "BTC", "quoteAsset": "USDT", "status": "TRADING", "contractType": "PERPETUAL"},
+            {"symbol": "ABCUSDT", "baseAsset": "ABC", "quoteAsset": "USDT", "status": "TRADING", "contractType": "PERPETUAL"},
+            {"symbol": "1000ABCUSDT", "baseAsset": "ABC", "quoteAsset": "USDT", "status": "TRADING", "contractType": "PERPETUAL"},
         ]
     }
     books = [
-        {"symbol": "BTCUSDT", "bidPrice": "100", "askPrice": "101"},
-        {"symbol": "BTCUSDT_2", "bidPrice": "100", "askPrice": "101"},
+        {"symbol": "ABCUSDT", "bidPrice": "100", "askPrice": "101"},
+        {"symbol": "1000ABCUSDT", "bidPrice": "10", "askPrice": "11"},
     ]
     prices = [
-        {"symbol": "BTCUSDT", "price": "100.5"},
-        {"symbol": "BTCUSDT_2", "price": "100.5"},
+        {"symbol": "ABCUSDT", "price": "100.5"},
+        {"symbol": "1000ABCUSDT", "price": "10.5"},
     ]
 
-    eligible, _ = mod.eligible_bases(exchange, books, prices)
-    assert eligible == ["BTC"]
+    eligible, _ = mod.eligible_markets(exchange, books, prices)
+    identifiers = [row["identifier"] for row in eligible]
+
+    assert identifiers == ["binance::1000ABCUSDT", "binance::ABCUSDT"]
