@@ -80,6 +80,17 @@ jobs:
               echo "=== RECENT BOT LOG ==="
               tail -n 120 runtime-tools/passivbot-demo.log 2>/dev/null || true
               ;;
+            evidence)
+              cd "$PB"
+              echo "=== ACCOUNT STATE ==="
+              ./venv/bin/python runtime-tools/demostate.py
+              echo "=== EQUITY ==="
+              ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
+              echo "=== FORAGER / ENTRY EVIDENCE ==="
+              grep -E "\[forager\]|forager\.selection|top_scores|selected_symbols|entry_|ideal orders|create order|order create|placed|submitted|shortlist|slots_open|startup-ready" runtime-tools/passivbot-demo.log 2>/dev/null | tail -n 220 || true
+              echo "=== RECENT LOG TAIL ==="
+              tail -n 220 runtime-tools/passivbot-demo.log 2>/dev/null || true
+              ;;
             start-test01)
               cd "$PB"
               ./venv/bin/python runtime-tools/demo-universe.py --config configs/demo-hsl.json --report runtime-tools/demo-universe-report.json
