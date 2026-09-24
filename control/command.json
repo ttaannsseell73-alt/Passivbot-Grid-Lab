@@ -1,5 +1,5 @@
 {
-  "mode": "start-test01",
-  "requested_at": "2026-09-24T15:14:00+03:00",
-  "revision": "bounded-ranking-v1"
+  "mode": "evidence",
+  "requested_at": "2026-09-24T15:15:00+03:00",
+  "reason": "post-patch first ranking/entry evidence"
 }
