@@ -12,7 +12,13 @@ spec.loader.exec_module(mod)
 
 
 def _valid_fixture(body: str) -> str:
-    return "async def fixture(self, ordered_symbols, load_symbol_bundle):\n    if True:\n" + body
+    return (
+        "class Fixture:\n"
+        "    async def fixture(self, ordered_symbols, load_symbol_bundle):\n"
+        "        if False:\n"
+        "            pass\n"
+        + body
+    )
 
 
 def test_exact_pinned_shape_is_bounded_and_idempotent():
