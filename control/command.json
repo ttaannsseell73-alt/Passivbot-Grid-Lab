@@ -1,5 +1,5 @@
 {
   "mode": "forager-config",
-  "requested_at": "2026-09-26T01:58:00+03:00",
-  "reason": "inspect exact locked TEST01 forager parameters for corrected shortlist-gated evaluation"
+  "requested_at": "2026-09-26T02:03:00+03:00",
+  "reason": "inspect full side strategy parameters for exact historical forager reconstruction"
 }
