@@ -38,6 +38,7 @@ jobs:
           install -m 755 runtime-tools/patch-ranking-concurrency.py "$PB/runtime-tools/patch-ranking-concurrency.py"
           install -m 755 runtime-tools/patch-orchestrator-concurrency.py "$PB/runtime-tools/patch-orchestrator-concurrency.py"
           install -m 755 runtime-tools/test02-direction-shadow.py "$PB/runtime-tools/test02-direction-shadow.py"
+          install -m 755 runtime-tools/test03-price-action-shadow.py "$PB/runtime-tools/test03-price-action-shadow.py"
           echo TOOLS-PASS
 
       - name: Execute requested mode
@@ -152,6 +153,25 @@ jobs:
                 --audit "NIL,long,2026-09-24T12:36:13Z" \
                 --json-out runtime-tools/test02-direction-report.json
               echo "=== TEST02 POST ACCOUNT STATE ==="
+              ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
+              ;;
+            test03-shadow)
+              cd "$PB"
+              echo "=== TEST03 PRE ACCOUNT STATE ==="
+              ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
+              ./venv/bin/python runtime-tools/test03-price-action-shadow.py \
+                --root caches/ohlcv/binance/1h \
+                --direction-threshold 0.18 \
+                --pa-threshold 0.24 \
+                --min-pa-votes 2 \
+                --min-history 48 \
+                --step-hours 4 \
+                --round-trip-cost-bps 4 \
+                --audit "AKE,long,2026-09-24T12:36:13Z" \
+                --audit "BROCCOLI714,short,2026-09-24T12:36:13Z" \
+                --audit "NIL,long,2026-09-24T12:36:13Z" \
+                --json-out runtime-tools/test03-price-action-report.json
+              echo "=== TEST03 POST ACCOUNT STATE ==="
               ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
               ;;
             patch-ranking-concurrency)
