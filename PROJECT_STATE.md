@@ -273,3 +273,29 @@ Known locked Forager parameters recovered from the canonical config:
 - SHORT: volatility EMA 10m, volume EMA 360m
 
 Until shortlist reconstruction matches observed live ranking, TEST #02 and TEST #03 are **INVALID / NOT VERDICTS**.
+
+## Locked Forager reporting format — 2026-09-26
+
+Every corrected Forager evaluation must report separate LONG and SHORT Top 10 tables from the canonical Rust selector diagnostics, not from the approximate monitor ranking.
+
+Required columns per candidate:
+- rank
+- symbol
+- total_score
+- ema_readiness_component (normalized 0..1; lower raw readiness is better before normalization)
+- ema_contribution = 0.45 * ema_readiness_component
+- volatility_component (normalized 0..1)
+- volatility_contribution = 0.40 * volatility_component
+- volume_component (normalized 0..1)
+- volume_contribution = 0.15 * volume_component
+- selected
+- incumbent
+
+The report must also show:
+- volume_drop_pct and surviving candidate count
+- slots_to_fill
+- score_hysteresis_pct and any hysteresis event
+- exact decision timestamp
+- whether Direction/Price Action later allowed or vetoed the candidate
+
+Do not invent ranks 4-10 when only truncated console evidence is available. Canonical Top 10 must come from Rust diagnostics.forager_selections[*].top_scores or an exact historical reconstruction validated against it.
