@@ -7,16 +7,13 @@ mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 
 
+def _valid_fixture(*blocks: str) -> str:
+    body = "\n        # fixture separator\n".join(blocks)
+    return "async def fixture(self, syms, one):\n    if True:\n" + body
+
+
 def test_exact_pinned_shapes_are_bounded_and_idempotent():
-    source = (
-        "header\n"
-        + mod.SCALAR_OLD
-        + "\nmiddle\n"
-        + mod.SCALAR_OLD
-        + "\nother\n"
-        + mod.PAIR_OLD
-        + "\nfooter\n"
-    )
+    source = _valid_fixture(mod.SCALAR_OLD, mod.SCALAR_OLD, mod.PAIR_OLD)
 
     patched, report = mod.patch_text(source)
 
