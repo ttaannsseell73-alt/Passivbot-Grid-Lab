@@ -88,7 +88,7 @@ jobs:
               echo "=== EQUITY ==="
               ./venv/bin/python runtime-tools/gridv2-monitor.py snapshot
               echo "=== SAFE LIVE CONFIG ==="
-              ./venv/bin/python -c 'import json; c=json.load(open("configs/demo-hsl.json"))["live"]; keys=["max_ohlcv_fetches_per_minute","max_forager_candle_refresh_seconds","max_forager_candle_staleness_minutes","defer_broad_candle_warmup","enable_forager_ws_candles","warmup_concurrency","max_concurrent_api_requests","max_warmup_minutes"]; print({k:c.get(k) for k in keys})'
+              ./venv/bin/python -c 'import json; c=json.load(open("configs/demo-hsl.json"))["live"]; keys=["max_ohlcv_fetches_per_minute","max_forager_candle_refresh_seconds","max_forager_candle_staleness_minutes","defer_broad_candle_warmup","enable_forager_ws_candles","warmup_concurrency","warmup_fetch_delay_ms","max_concurrent_api_requests","candle_lock_timeout_seconds","max_warmup_minutes"]; print({k:c.get(k) for k in keys})'
               echo "=== FORAGER / ENTRY EVIDENCE ==="
               grep -E "\[forager\]|forager\.selection|top_scores|selected_symbols|entry_|ideal orders|create order|order create|placed|submitted|shortlist|slots_open|startup-ready" runtime-tools/passivbot-demo.log 2>/dev/null | tail -n 220 || true
               echo "=== RECENT LOG TAIL ==="
@@ -118,6 +118,18 @@ jobs:
               ./venv/bin/python -m py_compile src/passivbot.py
               grep -q GRID_V2_BOUNDED_FORAGER_RANKING src/passivbot.py
               echo RANKING-PATCH-VERIFY-PASS
+              ;;
+            patch-orchestrator-concurrency)
+              cd "$PB"
+              if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
+                echo "PATCH-REFUSED bot running"
+                exit 1
+              fi
+              ./venv/bin/python runtime-tools/patch-orchestrator-concurrency.py --path src/passivbot.py
+              ./venv/bin/python -m py_compile src/passivbot.py
+              grep -q GRID_V2_BOUNDED_ORCHESTRATOR_EMA src/passivbot.py
+              grep -q GRID_V2_BOUNDED_FORAGER_RANKING src/passivbot.py
+              echo ORCHESTRATOR-PATCH-VERIFY-PASS
               ;;
             start-test01)
               cd "$PB"
