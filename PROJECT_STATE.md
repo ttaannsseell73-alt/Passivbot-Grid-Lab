@@ -125,7 +125,7 @@ Interpretation:
 - do not flatten positions merely to apply the staged candle-concurrency patch
 - allow the running TEST #01 position lifecycle to continue under the locked rules
 
-## GRID V2 — TEST #02 Direction/Quality Gate shadow evaluation — 2026-09-26
+## GRID V2 — TEST #02 Direction/Quality Gate shadow evaluation — INVALIDATED 2026-09-26
 
 Execution:
 - read-only shadow evaluation; no exchange orders were created
@@ -153,16 +153,14 @@ Broad historical evidence:
 - SHORT 4h: hit 41.98%; 1% trimmed gross mean -0.0404%; after 4 bps approx -0.0804%
 - SHORT 12h: hit 42.70%; 1% trimmed gross mean -0.0862%; after 4 bps approx -0.1262%
 
-Interpretation / lock:
-- TEST #02 is **NOT a clean standalone direction-engine PASS**
-- it shows useful veto behavior on the actual TEST #01 entries
-- medium-horizon LONG evidence is positive but not strong enough to treat as proven
-- SHORT direction evidence is negative and must not be promoted
-- canonical role for this version of Direction is **VETO / QUALITY GATE CANDIDATE**, not signal generator
-- do not promote TEST #02 to real-order execution from this evidence alone
-- TEST #01 live positions remain untouched
+Interpretation / correction:
+- **INVALID BROAD-EVENT METHODOLOGY**: this evaluator scored Direction events across the full cached symbol universe instead of first reconstructing Native Forager shortlist/top-slot candidates.
+- therefore the 50,692-event aggregate performance is NOT a valid TEST #02 result for `Forager + Direction/Quality Gate` and must not be used for promotion/rejection.
+- the three TEST #01 entry audits remain descriptive only; they do not validate the full combined selector.
+- TEST #02 must be rerun only after the historical Forager shortlist is reconstructed and validated against the observed live shortlist (`NIL/AKE/FLOCK...` long and `FLOCK/PHA/BROCCOLI714...` short).
+- no promotion/rejection verdict is locked from this invalid run.
 
-## GRID V2 — TEST #03 Direction veto + Price Action shadow — 2026-09-26
+## GRID V2 — TEST #03 Direction veto + Price Action shadow — INVALIDATED 2026-09-26
 
 Execution:
 - read-only shadow evaluation; no exchange orders created
@@ -192,14 +190,11 @@ TEST #01 entry audit:
 - NIL LONG: vetoed by Direction before PA
 - no TEST #01 trade would have passed the combined gate
 
-Interpretation / lock:
-- TEST #03 **FAILS the promotion criterion**
-- Price Action gate reduces trade count but does not improve the Direction-only edge
-- on the strongest observed LONG 12h surface it degrades the robust mean versus TEST #02
-- SHORT remains non-promotable
-- do not promote TEST #03 to live/testnet order generation
-- do not proceed automatically to TEST #04 Quant merely to force the GRID V2 ladder forward
-- current GRID V2 evidence: Native Forager baseline failed economically; Direction is useful mainly as a veto candidate; this Price Action formulation did not add value
+Interpretation / correction:
+- **INVALID BROAD-EVENT METHODOLOGY**: TEST #03 inherited the invalid TEST #02 universe and applied Price Action to all Direction-qualified market events, not to reconstructed Native Forager shortlist candidates.
+- therefore its comparison against TEST #02 does not answer whether Price Action improves `Forager -> Direction -> Price Action` selection quality.
+- all TEST #03 promotion/rejection conclusions are withdrawn.
+- rerun only after exact historical Forager shortlist reconstruction is validated against live shortlist evidence.
 
 ## Locked TEST ladder
 
@@ -256,3 +251,25 @@ Rules:
 - do not claim profit without true mark-to-market equity evidence
 - do not close positions because an observation period ended
 - this file is the canonical continuation checkpoint
+
+## Methodology correction — 2026-09-26
+
+A review found a material test-design error in the first TEST #02/#03 shadow evaluators:
+- they iterated the full 526-symbol cache and sampled every eligible Direction event
+- they did **not** first reproduce Passivbot Native Forager's ranked shortlist / available-slot selection
+- this changes the tested population and makes the broad aggregate results non-comparable to the intended ladder
+
+Corrected canonical test contract:
+1. reconstruct Native Forager features using the locked side-specific parameters and exact Passivbot normalization/pruning rules
+2. validate reconstructed shortlist at the known live decision timestamp against observed ranking evidence
+3. only then apply Direction gate to Forager-selected candidates
+4. only then apply Price Action gate to the survivors
+5. compare same candidate population, same timestamps, same costs and horizons
+
+Known locked Forager parameters recovered from the canonical config:
+- score weights both sides: EMA readiness 45%, volatility 40%, volume 15%
+- volume_drop_pct: 40%
+- LONG: volatility EMA 225m, volume EMA 520m
+- SHORT: volatility EMA 10m, volume EMA 360m
+
+Until shortlist reconstruction matches observed live ranking, TEST #02 and TEST #03 are **INVALID / NOT VERDICTS**.
