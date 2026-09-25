@@ -1,5 +1,5 @@
 {
-  "mode": "evidence",
-  "requested_at": "2026-09-25T13:22:00+03:00",
-  "reason": "fresh lock-storm evidence before candle-layer patch"
+  "mode": "deploy-orchestrator-test01",
+  "requested_at": "2026-09-25T13:40:00+03:00",
+  "reason": "guarded deploy of bounded orchestrator EMA fan-out and TEST01 restart"
 }
