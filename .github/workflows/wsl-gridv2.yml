@@ -76,7 +76,7 @@ jobs:
               ;;
             forager-config)
               cd "$PB"
-              ./venv/bin/python -c 'import json; c=json.load(open("configs/demo-hsl.json")); print("LIVE",json.dumps(c.get("live",{}),sort_keys=True)); [print(side.upper(),json.dumps({k:c.get("bot",{}).get(side,{}).get(k) for k in ("n_positions","wallet_exposure_limit","ema_span_0","ema_span_1","entry_initial_ema_dist","forager")},sort_keys=True)) for side in ("long","short")]'
+              ./venv/bin/python -c 'import json; c=json.load(open("configs/demo-hsl.json")); live=c.get("live",{}); print("LIVE",json.dumps({k:live.get(k) for k in ("leverage","minimum_coin_age_days","filter_by_min_effective_cost","forager_score_hysteresis_pct","strategy_kind")},sort_keys=True)); [print(side.upper(),json.dumps(c.get("bot",{}).get(side,{}),sort_keys=True)) for side in ("long","short")]'
               ;;
             status)
               cd "$PB"
