@@ -123,20 +123,17 @@ jobs:
               ;;
             cache-array-sample)
               cd "$PB"
-              ./venv/bin/python - <<'PY'
-import glob, numpy as np
-for sym in ("AKE","BROCCOLI714","NIL"):
-    for tf in ("1m","1h"):
-        files=sorted(glob.glob(f"caches/ohlcv/binance/{tf}/{sym}_USDT:USDT/*.npy"))
-        print(f"=== {sym} {tf} ARRAY ===")
-        if not files:
-            print("NONE")
-            continue
-        a=np.load(files[-1], allow_pickle=False)
-        print("file", files[-1], "shape", a.shape, "dtype", a.dtype, "names", a.dtype.names)
-        print("first", a[0] if len(a) else None)
-        print("last", a[-1] if len(a) else None)
-PY
+              for sym in AKE BROCCOLI714 NIL; do
+                for tf in 1m 1h; do
+                  echo "=== $sym $tf ARRAY ==="
+                  file="$(find "caches/ohlcv/binance/$tf/${sym}_USDT:USDT" -maxdepth 1 -type f -name '*.npy' 2>/dev/null | sort | tail -n 1 || true)"
+                  if [ -z "$file" ]; then
+                    echo NONE
+                    continue
+                  fi
+                  ./venv/bin/python -c 'import numpy as np,sys; a=np.load(sys.argv[1],allow_pickle=False); print("file",sys.argv[1],"shape",a.shape,"dtype",a.dtype,"names",a.dtype.names); print("first",a[0] if len(a) else None); print("last",a[-1] if len(a) else None)' "$file"
+                done
+              done
               ;;
             patch-ranking-concurrency)
               cd "$PB"
