@@ -136,29 +136,11 @@ jobs:
               echo "=== PRE-DEPLOY ACCOUNT GUARD ==="
               snapshot="$(./venv/bin/python runtime-tools/gridv2-monitor.py snapshot)"
               printf '%s\n' "$snapshot"
-              if ! printf '%s\n' "$snapshot" | grep -Eq '^POSITIONS[[:space:]]+0[[:space:]]*            stop)
-              stop_bot
-              echo STOP-PASS
-              ;;
-            *)
-              echo "REFUSED unknown mode: $MODE"
-              exit 2
-              ;;
-          esac
-; then
+              if ! printf '%s\n' "$snapshot" | grep -Eq '^POSITIONS[[:space:]]+0[[:space:]]*$'; then
                 echo "DEPLOY-REFUSED non-flat positions"
                 exit 1
               fi
-              if ! printf '%s\n' "$snapshot" | grep -Eq '^OPEN ORDERS[[:space:]]+0[[:space:]]*            stop)
-              stop_bot
-              echo STOP-PASS
-              ;;
-            *)
-              echo "REFUSED unknown mode: $MODE"
-              exit 2
-              ;;
-          esac
-; then
+              if ! printf '%s\n' "$snapshot" | grep -Eq '^OPEN ORDERS[[:space:]]+0[[:space:]]*$'; then
                 echo "DEPLOY-REFUSED open orders present"
                 exit 1
               fi
@@ -197,7 +179,7 @@ jobs:
               echo "=== POST-DEPLOY ACCOUNT STATE ==="
               ./venv/bin/python runtime-tools/demostate.py
               echo "=== POST-DEPLOY MARKERS ==="
-              grep -n 'GRID_V2_BOUNDED_\(FORAGER_RANKING\|ORCHESTRATOR_EMA\)' src/passivbot.py | head -n 20
+              grep -n -E 'GRID_V2_BOUNDED_(FORAGER_RANKING|ORCHESTRATOR_EMA)' src/passivbot.py | head -n 20
               echo "=== POST-DEPLOY LOCK / FORAGER EVIDENCE ==="
               grep -E 'orchestrator EMA bounded fan-out|fetch_lock_hold_timeout|\[forager\]|shortlist|selected_symbols|top_scores|startup-ready' runtime-tools/passivbot-demo.log 2>/dev/null | tail -n 240 || true
               ;;
