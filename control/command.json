@@ -1,5 +1,5 @@
 {
-  "mode": "deploy-orchestrator-test01",
-  "requested_at": "2026-09-25T13:41:00+03:00",
-  "reason": "retry valid guarded deploy of bounded orchestrator EMA fan-out and TEST01 restart"
+  "mode": "evidence",
+  "requested_at": "2026-09-25T13:51:00+03:00",
+  "reason": "read-only snapshot after first confirmed TEST01 positions"
 }
