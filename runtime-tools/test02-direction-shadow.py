@@ -183,19 +183,28 @@ def summarize(samples: list[dict], horizons: Iterable[int], round_trip_cost: flo
     out = {}
     for h in horizons:
         vals = np.asarray([s[f"signed_{h}h"] for s in samples], dtype=np.float64)
+        vals = vals[np.isfinite(vals)]
         if len(vals) == 0:
             out[f"{h}h"] = {"events": 0}
             continue
         net = vals - round_trip_cost
+        q01 = float(np.quantile(vals, 0.01))
+        q99 = float(np.quantile(vals, 0.99))
+        trimmed = vals[(vals >= q01) & (vals <= q99)]
         out[f"{h}h"] = {
             "events": int(len(vals)),
             "gross_hit_rate": float(np.mean(vals > 0.0)),
             "net_hit_rate": float(np.mean(net > 0.0)),
             "mean_gross_signed_return": float(np.mean(vals)),
             "median_gross_signed_return": float(np.median(vals)),
+            "trimmed_1pct_mean_gross_signed_return": float(np.mean(trimmed)) if len(trimmed) else None,
             "mean_net_signed_return": float(np.mean(net)),
+            "zero_return_rate": float(np.mean(np.abs(vals) <= 1e-12)),
+            "extreme_abs_gt_20pct_rate": float(np.mean(np.abs(vals) > 0.20)),
+            "p01_gross_signed_return": q01,
             "p10_gross_signed_return": float(np.quantile(vals, 0.10)),
             "p90_gross_signed_return": float(np.quantile(vals, 0.90)),
+            "p99_gross_signed_return": q99,
         }
     return out
 
@@ -256,14 +265,17 @@ def main() -> int:
             base = float(close[i])
             if not (base > 0.0 and math.isfinite(base)):
                 continue
+            forward_prices = [float(close[i + h]) for h in horizons]
+            if not all(price > 0.0 and math.isfinite(price) for price in forward_prices):
+                continue
             row = {
                 "symbol": symbol,
                 "ts": int(ts[i]),
                 "direction": "LONG" if direction > 0 else "SHORT",
                 "score": float(arrays["score"][i]),
             }
-            for h in horizons:
-                r = float(close[i + h] / base - 1.0)
+            for h, future_price in zip(horizons, forward_prices):
+                r = float(future_price / base - 1.0)
                 row[f"signed_{h}h"] = direction * r
             samples.append(row)
             sym_events += 1
@@ -345,7 +357,11 @@ def main() -> int:
             "long_events": longs,
             "short_events": shorts,
         },
-        "performance": summarize(samples, horizons, cost),
+        "performance": {
+            "overall": summarize(samples, horizons, cost),
+            "long": summarize([s for s in samples if s["direction"] == "LONG"], horizons, cost),
+            "short": summarize([s for s in samples if s["direction"] == "SHORT"], horizons, cost),
+        },
         "audit": audits,
         "latest_top_long": latest_long,
         "latest_top_short": latest_short,
@@ -353,8 +369,10 @@ def main() -> int:
 
     print("=== TEST02 SUMMARY ===")
     print(json.dumps(report["coverage"], sort_keys=True))
-    for h, stats in report["performance"].items():
-        print(h, json.dumps(stats, sort_keys=True))
+    for group, group_stats in report["performance"].items():
+        print(f"-- {group.upper()} --")
+        for h, stats in group_stats.items():
+            print(h, json.dumps(stats, sort_keys=True))
     print("=== TEST01 ENTRY AUDIT ===")
     for item in audits:
         print(json.dumps(item, sort_keys=True))
