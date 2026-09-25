@@ -1,5 +1,5 @@
 {
-  "mode": "cache-array-sample",
-  "requested_at": "2026-09-26T00:49:00+03:00",
-  "reason": "retry read-only candle ndarray inspection for TEST02"
+  "mode": "test02-shadow",
+  "requested_at": "2026-09-26T00:55:00+03:00",
+  "reason": "run GRID V2 TEST02 Direction/Quality Gate shadow evaluation on canonical 1h cache"
 }
