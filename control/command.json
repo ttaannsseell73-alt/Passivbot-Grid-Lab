@@ -1,5 +1,5 @@
 {
   "mode": "cache-array-sample",
-  "requested_at": "2026-09-26T00:46:00+03:00",
-  "reason": "inspect candle ndarray dtype for TEST02 shadow evaluator"
+  "requested_at": "2026-09-26T00:49:00+03:00",
+  "reason": "retry read-only candle ndarray inspection for TEST02"
 }
