@@ -125,6 +125,43 @@ Interpretation:
 - do not flatten positions merely to apply the staged candle-concurrency patch
 - allow the running TEST #01 position lifecycle to continue under the locked rules
 
+## GRID V2 — TEST #02 Direction/Quality Gate shadow evaluation — 2026-09-26
+
+Execution:
+- read-only shadow evaluation; no exchange orders were created
+- same canonical Passivbot 1h candle cache
+- 526 cached symbols, 516 symbols with eligible events
+- 50,692 causal direction events
+- direction features only: EMA spread 45%, EMA slope 30%, 6h momentum 25%
+- quality gate: score threshold 0.18, >=2/3 directional votes, 48h contiguous history
+- sampled every 4h; forward evaluation at 1h / 4h / 12h
+- assumed round-trip cost: 4 bps
+- CI GREEN and pre/post account snapshot confirmed TEST #01 account was untouched
+
+TEST #01 entry audit under TEST #02 gate:
+- AKE LONG -> TEST #02 = NEUTRAL, score -0.0727 -> would veto
+- BROCCOLI714 SHORT -> TEST #02 = LONG, score +0.3253 -> would veto
+- NIL LONG -> TEST #02 = NEUTRAL, score +0.1628 -> would veto
+- therefore all three existing TEST #01 entries would have been blocked by the Direction/Quality Gate
+
+Broad historical evidence:
+- overall 1h gross hit rate: 41.44%; trimmed gross mean -0.0625%
+- overall 4h gross hit rate: 45.45%; 1% trimmed gross mean +0.0634%; after 4 bps approx +0.0234%
+- overall 12h gross hit rate: 47.27%; 1% trimmed gross mean +0.2182%; after 4 bps approx +0.1782%
+- LONG 4h: hit 48.70%; 1% trimmed gross mean +0.1678%; after 4 bps approx +0.1278%
+- LONG 12h: hit 51.53%; 1% trimmed gross mean +0.5280%; after 4 bps approx +0.4880%
+- SHORT 4h: hit 41.98%; 1% trimmed gross mean -0.0404%; after 4 bps approx -0.0804%
+- SHORT 12h: hit 42.70%; 1% trimmed gross mean -0.0862%; after 4 bps approx -0.1262%
+
+Interpretation / lock:
+- TEST #02 is **NOT a clean standalone direction-engine PASS**
+- it shows useful veto behavior on the actual TEST #01 entries
+- medium-horizon LONG evidence is positive but not strong enough to treat as proven
+- SHORT direction evidence is negative and must not be promoted
+- canonical role for this version of Direction is **VETO / QUALITY GATE CANDIDATE**, not signal generator
+- do not promote TEST #02 to real-order execution from this evidence alone
+- TEST #01 live positions remain untouched
+
 ## Locked TEST ladder
 
 1. TEST #01 — Native Forager baseline
