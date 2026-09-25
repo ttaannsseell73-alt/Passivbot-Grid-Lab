@@ -1,6 +1,7 @@
 # PROJECT STATE — LOCKED CHECKPOINT
 
 Locked at: 2026-09-25 13:10 TRT
+Engineering checkpoint updated: 2026-09-25 13:42 TRT
 Reconfirmed after remote-runner handoff: 2026-09-25
 
 ## Canonical track
@@ -64,6 +65,32 @@ Next engineering action remains on this exact line:
 - bound/fix candle refresh pressure
 - preserve the full locked experiment
 - do not change the TEST #01 strategy logic merely to make the bot trade
+
+## Candle bottleneck engineering checkpoint — 2026-09-25
+
+Root-cause narrowing:
+- the earlier `GRID_V2_BOUNDED_FORAGER_RANKING` patch is already present on the runner baseline
+- the broad Forager candidate refresh loop itself is sequential and is not the source of the hundreds-task storm
+- pinned upstream `src/passivbot.py` still contains an unbounded orchestrator EMA fan-out when `fetch_delay_s == 0`: one `load_symbol_bundle()` task per ordered symbol
+- this code path is consistent with the observed simultaneous 1h/1m lock-hold watchdog storm across many distinct symbols
+
+Prepared canonical fix:
+- `runtime-tools/patch-orchestrator-concurrency.py`
+- marker: `GRID_V2_BOUNDED_ORCHESTRATOR_EMA`
+- preserves EMA math, Forager weights, shortlist rules, candle validity requirements, fetch budget, leverage, TWEL, and slot counts
+- only changes coroutine fan-out: orchestrator EMA work is processed in bounded batches using Passivbot's existing candle concurrency control
+- patch is fail-closed against an unexpected pinned source shape and is idempotent
+- dedicated unit test added
+- ranking patch test fixture repaired
+- repository CI is GREEN after these changes
+
+Deployment status:
+- **NOT YET DEPLOYED TO THE LOCAL PASSIVBOT SOURCE**
+- no claim is made that the candle storm is fixed yet
+- a guarded deployment mode `deploy-orchestrator-test01` is committed
+- guard requires `POSITIONS = 0` and `OPEN ORDERS = 0` before stopping the bot or modifying the local source
+- after guard: apply patch -> compile -> verify both bounded markers -> preflight universe -> restart unchanged TEST #01 -> collect lock/Forager evidence
+- GitHub self-hosted `gridv2` control job is currently waiting for a runner to pick it up; therefore execution evidence is pending
 
 ## Locked TEST ladder
 
