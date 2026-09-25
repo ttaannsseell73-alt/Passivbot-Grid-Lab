@@ -162,6 +162,45 @@ Interpretation / lock:
 - do not promote TEST #02 to real-order execution from this evidence alone
 - TEST #01 live positions remain untouched
 
+## GRID V2 — TEST #03 Direction veto + Price Action shadow — 2026-09-26
+
+Execution:
+- read-only shadow evaluation; no exchange orders created
+- same canonical Passivbot 1h candle cache
+- 526 cached symbol directories
+- 50,692 Direction-qualified causal events
+- Price Action gate passed 18,696 events (36.88%)
+- LONG PA events: 10,400
+- SHORT PA events: 8,296
+- Price Action components: market structure 30%, breakout/retest 20%, liquidity sweep 20%, rejection 15%, compression/expansion 15%
+- PA threshold 0.24 and minimum 2 aligned votes
+- same 4 bps assumed round-trip cost
+- CI GREEN; account remained flat and untouched before/after shadow run
+
+Comparison against TEST #02 Direction-only:
+- Direction-only overall 4h 1% trimmed gross mean: +0.0634%
+- TEST #03 PA-gated overall 4h 1% trimmed gross mean: -0.0389%
+- Direction-only overall 12h 1% trimmed gross mean: +0.2182%
+- TEST #03 PA-gated overall 12h 1% trimmed gross mean: +0.0812%
+- Direction-only LONG 12h 1% trimmed gross mean: +0.5280%
+- TEST #03 LONG 12h 1% trimmed gross mean: +0.3094%
+- TEST #03 SHORT remains negative: 4h trimmed -0.0738%, 12h trimmed -0.1817%
+
+TEST #01 entry audit:
+- AKE LONG: vetoed by Direction before PA
+- BROCCOLI714 SHORT: vetoed by Direction before PA
+- NIL LONG: vetoed by Direction before PA
+- no TEST #01 trade would have passed the combined gate
+
+Interpretation / lock:
+- TEST #03 **FAILS the promotion criterion**
+- Price Action gate reduces trade count but does not improve the Direction-only edge
+- on the strongest observed LONG 12h surface it degrades the robust mean versus TEST #02
+- SHORT remains non-promotable
+- do not promote TEST #03 to live/testnet order generation
+- do not proceed automatically to TEST #04 Quant merely to force the GRID V2 ladder forward
+- current GRID V2 evidence: Native Forager baseline failed economically; Direction is useful mainly as a veto candidate; this Price Action formulation did not add value
+
 ## Locked TEST ladder
 
 1. TEST #01 — Native Forager baseline
