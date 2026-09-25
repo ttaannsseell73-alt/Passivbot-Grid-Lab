@@ -108,6 +108,19 @@ jobs:
               find caches -type f -name '*.npz' 2>/dev/null | wc -l
               du -sh caches/ohlcv 2>/dev/null || true
               ;;
+            cache-sample)
+              cd "$PB"
+              for sym in AKE BROCCOLI714 NIL; do
+                for tf in 1m 1h; do
+                  d="caches/ohlcv/binance/$tf/${sym}_USDT:USDT"
+                  echo "=== $sym $tf DIR ==="
+                  find "$d" -maxdepth 2 -type f -printf '%P %s bytes\n' 2>/dev/null | sort | head -n 30 || true
+                  echo "=== $sym $tf INDEX ==="
+                  cat "$d/index.json" 2>/dev/null | head -c 8000 || true
+                  echo
+                done
+              done
+              ;;
             patch-ranking-concurrency)
               cd "$PB"
               if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
