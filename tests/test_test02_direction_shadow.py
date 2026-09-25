@@ -1,4 +1,5 @@
 import importlib.util
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -6,6 +7,7 @@ import numpy as np
 MODULE_PATH = Path(__file__).resolve().parents[1] / "runtime-tools" / "test02-direction-shadow.py"
 spec = importlib.util.spec_from_file_location("test02_direction_shadow", MODULE_PATH)
 mod = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = mod
 assert spec.loader is not None
 spec.loader.exec_module(mod)
 
