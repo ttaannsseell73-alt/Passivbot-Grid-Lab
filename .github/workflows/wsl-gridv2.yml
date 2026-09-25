@@ -74,6 +74,18 @@ jobs:
               cd "$PB"
               ./venv/bin/python runtime-tools/demo-universe.py --config configs/demo-hsl.json --report runtime-tools/demo-universe-report.json
               ;;
+            forager-config)
+              cd "$PB"
+              ./venv/bin/python - <<'PY'
+import json
+c=json.load(open("configs/demo-hsl.json"))
+print("LIVE", json.dumps(c.get("live",{}), sort_keys=True))
+for side in ("long","short"):
+    s=c.get("bot",{}).get(side,{})
+    keys=("n_positions","wallet_exposure_limit","ema_span_0","ema_span_1","entry_initial_ema_dist","forager")
+    print(side.upper(), json.dumps({k:s.get(k) for k in keys}, sort_keys=True))
+PY
+              ;;
             status)
               cd "$PB"
               ./venv/bin/python runtime-tools/demostate.py
