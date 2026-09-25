@@ -121,6 +121,23 @@ jobs:
                 done
               done
               ;;
+            cache-array-sample)
+              cd "$PB"
+              ./venv/bin/python - <<'PY'
+import glob, numpy as np
+for sym in ("AKE","BROCCOLI714","NIL"):
+    for tf in ("1m","1h"):
+        files=sorted(glob.glob(f"caches/ohlcv/binance/{tf}/{sym}_USDT:USDT/*.npy"))
+        print(f"=== {sym} {tf} ARRAY ===")
+        if not files:
+            print("NONE")
+            continue
+        a=np.load(files[-1], allow_pickle=False)
+        print("file", files[-1], "shape", a.shape, "dtype", a.dtype, "names", a.dtype.names)
+        print("first", a[0] if len(a) else None)
+        print("last", a[-1] if len(a) else None)
+PY
+              ;;
             patch-ranking-concurrency)
               cd "$PB"
               if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
