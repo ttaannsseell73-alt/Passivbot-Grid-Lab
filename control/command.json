@@ -1,5 +1,5 @@
 {
-  "mode": "test02-shadow",
-  "requested_at": "2026-09-26T01:02:00+03:00",
-  "reason": "rerun TEST02 after invalid forward-label quality fix"
+  "mode": "evidence",
+  "requested_at": "2026-09-26T01:44:00+03:00",
+  "reason": "read-only current status before TEST03 planning"
 }
