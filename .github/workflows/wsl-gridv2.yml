@@ -131,6 +131,76 @@ jobs:
               grep -q GRID_V2_BOUNDED_FORAGER_RANKING src/passivbot.py
               echo ORCHESTRATOR-PATCH-VERIFY-PASS
               ;;
+            deploy-orchestrator-test01)
+              cd "$PB"
+              echo "=== PRE-DEPLOY ACCOUNT GUARD ==="
+              snapshot="$(./venv/bin/python runtime-tools/gridv2-monitor.py snapshot)"
+              printf '%s\n' "$snapshot"
+              if ! printf '%s\n' "$snapshot" | grep -Eq '^POSITIONS[[:space:]]+0[[:space:]]*            stop)
+              stop_bot
+              echo STOP-PASS
+              ;;
+            *)
+              echo "REFUSED unknown mode: $MODE"
+              exit 2
+              ;;
+          esac
+; then
+                echo "DEPLOY-REFUSED non-flat positions"
+                exit 1
+              fi
+              if ! printf '%s\n' "$snapshot" | grep -Eq '^OPEN ORDERS[[:space:]]+0[[:space:]]*            stop)
+              stop_bot
+              echo STOP-PASS
+              ;;
+            *)
+              echo "REFUSED unknown mode: $MODE"
+              exit 2
+              ;;
+          esac
+; then
+                echo "DEPLOY-REFUSED open orders present"
+                exit 1
+              fi
+              echo "DEPLOY-GUARD-PASS flat account"
+
+              stop_bot
+              sleep 3
+              if pgrep -f "/venv/bin/passivbot live" >/dev/null; then
+                echo "DEPLOY-REFUSED bot process still running"
+                exit 1
+              fi
+
+              ./venv/bin/python runtime-tools/patch-orchestrator-concurrency.py --path src/passivbot.py
+              ./venv/bin/python -m py_compile src/passivbot.py
+              grep -q GRID_V2_BOUNDED_FORAGER_RANKING src/passivbot.py
+              grep -q GRID_V2_BOUNDED_ORCHESTRATOR_EMA src/passivbot.py
+              echo "DEPLOY-PATCH-VERIFY-PASS"
+
+              ./venv/bin/python runtime-tools/demo-universe.py --config configs/demo-hsl.json --report runtime-tools/demo-universe-report.json
+              : > runtime-tools/passivbot-demo.log
+              env -u RUNNER_TRACKING_ID setsid -f runtime-tools/run-once.sh > runtime-tools/passivbot-demo.log 2>&1 </dev/null
+              echo "START-LAUNCHED"
+              sleep 75
+              echo "=== STARTUP LOG ==="
+              tail -n 180 runtime-tools/passivbot-demo.log || true
+              if grep -q "failed reason=startup_error" runtime-tools/passivbot-demo.log; then
+                echo "TEST01-STARTUP-FAIL"
+                stop_bot
+                exit 1
+              fi
+              if ! pgrep -f "/venv/bin/passivbot live" >/dev/null; then
+                echo "TEST01-PROCESS-MISSING"
+                exit 1
+              fi
+              echo "TEST01-STARTUP-PASS"
+              echo "=== POST-DEPLOY ACCOUNT STATE ==="
+              ./venv/bin/python runtime-tools/demostate.py
+              echo "=== POST-DEPLOY MARKERS ==="
+              grep -n 'GRID_V2_BOUNDED_\(FORAGER_RANKING\|ORCHESTRATOR_EMA\)' src/passivbot.py | head -n 20
+              echo "=== POST-DEPLOY LOCK / FORAGER EVIDENCE ==="
+              grep -E 'orchestrator EMA bounded fan-out|fetch_lock_hold_timeout|\[forager\]|shortlist|selected_symbols|top_scores|startup-ready' runtime-tools/passivbot-demo.log 2>/dev/null | tail -n 240 || true
+              ;;
             start-test01)
               cd "$PB"
               ./venv/bin/python runtime-tools/demo-universe.py --config configs/demo-hsl.json --report runtime-tools/demo-universe-report.json
