@@ -17,7 +17,7 @@ ScalpHunter remains a separate project and must not be mixed into GRID V2 unless
 
 ## GRID V2 — TEST #01 Native Forager baseline
 
-Current status: **BOT STARTUP-READY / NO TRADING EVIDENCE YET**
+Current status: **TRADING EVIDENCE CONFIRMED / 3 OPEN POSITIONS**
 
 Baseline:
 - equity: **4994.38271713 USDT**
@@ -26,12 +26,18 @@ Baseline:
 - open orders: 0
 - unrealized PnL: 0
 
-Latest evidence snapshot:
-- positions: 0
-- open orders: 0
-- NET TEST P/L: **+0.00000000 USDT**
-- NET RETURN: **+0.00000%**
-- bot reached `startup-ready`
+Latest evidence snapshot — 2026-09-25 13:51 TRT:
+- positions: **3**
+- open orders: **0**
+- wallet: **4994.36714536 USDT**
+- equity: **4993.24094784 USDT**
+- unrealized PnL: **-1.12619752 USDT**
+- NET TEST P/L: **-1.14176929 USDT**
+- NET RETURN: **-0.02286%**
+- AKE long: qty 204, entry 0.0403305, mark 0.03536449, uPnL -1.01306400
+- BROCCOLI714 short: qty 201, entry 0.02985, mark 0.03127951, uPnL -0.28733352
+- NIL long: qty 67, entry 0.1225, mark 0.1251, uPnL +0.17420000
+- bot reached `startup-ready` and subsequently produced real Forager selection/order/fill evidence
 
 Locked TEST #01 configuration:
 - Binance USD-M Demo/Test
@@ -53,13 +59,13 @@ The process is alive and startup-ready, but the full 527-market universe is prod
 Observed evidence:
 - repeated `fetch_lock_hold_timeout`
 - affects both 1m and 1h candle surfaces
-- no Forager shortlist/entry evidence yet
-- no positions/open orders yet
+- Forager shortlist/entry evidence is now confirmed
+- the lock storm still exists, but it did not prevent TEST #01 from eventually selecting candidates and opening positions
 
 Interpretation:
 - this is currently a market-data / Forager-readiness bottleneck
 - it is **not** profitability evidence
-- do not declare TEST #01 profitable or unprofitable until shortlist, entries, fills, and mark-to-market equity evidence exist
+- shortlist, entries, fills, and mark-to-market equity evidence now exist; current snapshot is a small loss, not a final verdict
 
 Next engineering action remains on this exact line:
 - bound/fix candle refresh pressure
@@ -85,12 +91,39 @@ Prepared canonical fix:
 - repository CI is GREEN after these changes
 
 Deployment status:
-- **NOT YET DEPLOYED TO THE LOCAL PASSIVBOT SOURCE**
+- **NOT DEPLOYED TO THE LOCAL PASSIVBOT SOURCE**
 - no claim is made that the candle storm is fixed yet
-- a guarded deployment mode `deploy-orchestrator-test01` is committed
-- guard requires `POSITIONS = 0` and `OPEN ORDERS = 0` before stopping the bot or modifying the local source
-- after guard: apply patch -> compile -> verify both bounded markers -> preflight universe -> restart unchanged TEST #01 -> collect lock/Forager evidence
-- GitHub self-hosted `gridv2` control job is currently waiting for a runner to pick it up; therefore execution evidence is pending
+- guarded deployment mode `deploy-orchestrator-test01` is committed
+- self-hosted `gridv2` runner is now online and connected
+- deploy guard executed and correctly refused the patch because TEST #01 had 3 open positions
+- therefore the running experiment was left untouched
+- patch remains staged for the next verified flat state (`POSITIONS = 0` and `OPEN ORDERS = 0`)
+- once flat: apply patch -> compile -> verify both bounded markers -> preflight universe -> restart unchanged TEST #01 -> collect post-patch lock/Forager evidence
+
+## First confirmed Native Forager trading evidence — 2026-09-25
+
+Selection:
+- LONG slots=5: selected included NIL, AKE, FLOCK (+2)
+- LONG top scores observed: NIL 0.855, AKE 0.727, FLOCK 0.627
+- SHORT slots=5: selected included FLOCK, PHA, BROCCOLI714 (+2)
+- SHORT top scores observed: FLOCK 0.582, PHA 0.579, BROCCOLI714 0.558
+
+Orders posted:
+- AKE buy long 204 @ 0.0403305
+- BROCCOLI714 sell short 201 @ 0.02984
+- NIL buy long 67 @ 0.1225
+
+Confirmed positions later:
+- AKE long 204
+- BROCCOLI714 short 201
+- NIL long 67
+
+Interpretation:
+- TEST #01 has now proven the native Forager can rank the 527-market universe sufficiently to select candidates and create real Binance Demo positions
+- this is an execution/readiness milestone, not profitability proof
+- current mark-to-market snapshot is slightly negative
+- do not flatten positions merely to apply the staged candle-concurrency patch
+- allow the running TEST #01 position lifecycle to continue under the locked rules
 
 ## Locked TEST ladder
 
