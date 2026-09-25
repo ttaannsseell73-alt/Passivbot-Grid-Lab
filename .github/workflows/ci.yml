@@ -21,7 +21,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install pytest numpy
       - run: pytest -q
-      - run: python -m py_compile runtime-tools/demo-universe.py runtime-tools/patch-ranking-concurrency.py runtime-tools/patch-orchestrator-concurrency.py runtime-tools/test02-direction-shadow.py
+      - run: python -m py_compile runtime-tools/demo-universe.py runtime-tools/patch-ranking-concurrency.py runtime-tools/patch-orchestrator-concurrency.py runtime-tools/test02-direction-shadow.py runtime-tools/test03-price-action-shadow.py
       - name: Verify ranking patch against pinned Passivbot
         run: |
           curl -fsSL https://raw.githubusercontent.com/enarjord/passivbot/7af64f3e930f4cf0cbb5fb88f31e9ce9594b0eb9/src/passivbot.py -o /tmp/passivbot.py
